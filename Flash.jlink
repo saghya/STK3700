@@ -1,0 +1,5 @@
+r
+h
+loadbin bin/STK3700.bin,0
+r
+exit
