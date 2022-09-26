@@ -1,0 +1,6 @@
+{
+    "files.associations": {
+        "bsp_trace.h": "c"
+    },
+    "cortex-debug.gdbPath.linux": "/usr/bin/gdb-multiarch"
+}
