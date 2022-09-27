@@ -6,4 +6,3 @@
 -I/opt/simplicitystudio/developer/sdks/gecko_sdk_suite/v2.7/platform/Device/SiliconLabs/EFM32GG/Include
 -I/opt/simplicitystudio/developer/sdks/gecko_sdk_suite/v2.7/platform/common/inc
 -I/opt/simplicitystudio/developer/sdks/gecko_sdk_suite/v2.7/hardware/kit/common/drivers
--I/opt/simplicitystudio/developer/sdks/gecko_sdk_suite/v2.7/hardware/kit/common/config
