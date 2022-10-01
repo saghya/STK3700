@@ -37,10 +37,10 @@ OBJCOPY = arm-none-eabi-objcopy
 SIZE = arm-none-eabi-size
 GDB = arm-none-eabi-gdb
 OBJ += ./bin/src/*.o
-OBJ += ./bin/BSP/*.o
+#OBJ += ./bin/BSP/*.o
 OBJ += ./bin/CMSIS/EFM32GG/*.o
 OBJ += ./bin/emlib/*.o
-OBJ += ./bin/Drivers/*.o
+#OBJ += ./bin/Drivers/*.o
 #OBJ += ./bin/service/*.o
 CFLAGS = -g3 -gdwarf-2 -mcpu=cortex-m3 -mthumb -std=c99 -D $(DEVICE)=1
 DEBUGFLAGS = -O0 -Wall -fmessage-length=0 -c -mno-sched-prolog -fno-builtin -ffunction-sections -fdata-sections -D DEBUG_EFM=1
