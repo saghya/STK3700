@@ -3,12 +3,6 @@
 #include "em_gpio.h"
 #include "em_usart.h"
 
-// avoid errors
-void _close(void) {}
-void _lseek(void) {}
-void _read(void) {}
-void _write(void) {}
-
 int main(void)
 {
     CMU_ClockEnable(cmuClock_GPIO, true);  // GPIO clk enable
