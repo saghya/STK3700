@@ -1,29 +1,8 @@
-/*******************************************************************************
- * @file
- * @brief LCD controller demo for EFM32GG_STK3700 development kit
- *******************************************************************************
- * # License
- * <b>Copyright 2018 Silicon Laboratories Inc. www.silabs.com</b>
- *******************************************************************************
- *
- * The licensor of this software is Silicon Laboratories Inc. Your use of this
- * software is governed by the terms of Silicon Labs Master Software License
- * Agreement (MSLA) available at
- * www.silabs.com/about-us/legal/master-software-license-agreement. This
- * software is distributed to you in Source Code format and is governed by the
- * sections of the MSLA applicable to Source Code.
- *
- ******************************************************************************/
-
 #include <stdint.h>
 #include <stdbool.h>
-#include "em_device.h"
-#include "em_chip.h"
 #include "em_cmu.h"
-#include "bsp.h"
 #include "em_lcd.h"
 #include "segmentlcd.h"
-#include "bsp_trace.h"
 
 #define SLEEP 200
 
@@ -148,23 +127,8 @@ void Delay(uint32_t dlyTicks)
     while ((msTicks - curTicks) < dlyTicks);
 }
 
-/*******************************************************************************
- * @brief  Main function
- ******************************************************************************/
 int main(void)
 {
-    /* Chip errata */
-    CHIP_Init();
-
-    /* If first word of user data page is non-zero, enable Energy Profiler trace
-     */
-    BSP_TraceProfilerSetup();
-
-    /* Enable two leds to show we're alive */
-    BSP_LedsInit();
-    BSP_LedSet(0);
-    BSP_LedSet(1);
-
     /* Setup SysTick Timer for 1 msec interrupts  */
     if (SysTick_Config(CMU_ClockFreqGet(cmuClock_CORE) / 1000)) {
         while (1);
@@ -178,6 +142,7 @@ int main(void)
 
         // loop through all segments
         for (int i = 1; i < 8; i++) {
+            SegmentLCD_Number(i);
             for (int j = a; j <= g; j++) {
                 print_segment(i, j);
                 Delay(200);
