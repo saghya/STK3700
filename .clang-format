@@ -9,3 +9,4 @@ IndentWidth: 4
 BreakBeforeBraces: Linux
 AllowShortIfStatementsOnASingleLine: false
 ColumnLimit: 80
+IndentCaseLabels: true
