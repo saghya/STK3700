@@ -77,23 +77,23 @@ position get_pos(int num, segment seg)
     return pos;
 }
 
-bool print_segment(int num, segment seg)
+bool print_segment(int num, segment seg, bool enable)
 {
     position pos = get_pos(num, seg);
     if (pos.com < 0 || pos.bit < 0) {
         return false;
     }
 
-    LCD_SegmentSet(pos.com, pos.bit, true);
+    LCD_SegmentSet(pos.com, pos.bit, enable);
 
     // g is actually 2 segments
     if (seg == g) {
         if (num < 4 || num == 7)
-            LCD_SegmentSet(pos.com, pos.bit + 1, true);
+            LCD_SegmentSet(pos.com, pos.bit + 1, enable);
         else if (num == 4)
-            LCD_SegmentSet(pos.com, pos.bit + 8 + 1, true);
+            LCD_SegmentSet(pos.com, pos.bit + 8 + 1, enable);
         else
-            LCD_SegmentSet(pos.com + 1, pos.bit + 1, true);
+            LCD_SegmentSet(pos.com + 1, pos.bit + 1, enable);
     }
 
     return true;
@@ -144,7 +144,7 @@ int main(void)
         for (int i = 1; i < 8; i++) {
             SegmentLCD_Number(i);
             for (int j = a; j <= g; j++) {
-                print_segment(i, j);
+                print_segment(i, j, true);
                 Delay(200);
             }
         }
