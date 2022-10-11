@@ -5,16 +5,17 @@
 
 int main(void)
 {
-    CMU_ClockEnable(cmuClock_GPIO, true);  // GPIO clk enable
-    CMU_ClockEnable(cmuClock_UART0, true); // UART clk enable
+    CMU_ClockEnable(cmuClock_GPIO, true);
+    CMU_ClockEnable(cmuClock_UART0, true);
 
-    GPIO_PinModeSet(gpioPortF, 7, gpioModePushPull, 1); // PF7 output 1
-    GPIO_PinModeSet(gpioPortE, 0, gpioModePushPull, 1); // PE0 output 1
-    GPIO_PinModeSet(gpioPortE, 1, gpioModeInput, 0);    // PE1 input  0
+    GPIO_PinModeSet(gpioPortF, 7, gpioModePushPull, 1);
+    GPIO_PinModeSet(gpioPortE, 0, gpioModePushPull, 1);
+    GPIO_PinModeSet(gpioPortE, 1, gpioModeInput, 0);
 
-    USART_InitAsync_TypeDef u = USART_INITASYNC_DEFAULT; // UART config
-    USART_InitAsync(UART0, &u);                          // 115200 8N1
-    UART0->ROUTE |= (1 << 8 | 1 << 0 | 1 << 1);          // Location1; Tx; Rx
+    USART_InitAsync_TypeDef UART0_init = USART_INITASYNC_DEFAULT; // UART config
+    USART_InitAsync(UART0, &UART0_init);                          // 115200 8N1
+    UART0->ROUTE |= USART_ROUTE_LOCATION_LOC1;
+    UART0->ROUTE |= USART_ROUTE_RXPEN | USART_ROUTE_TXPEN;
 
     // test
     char c;
