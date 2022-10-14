@@ -3,6 +3,15 @@
 #include "em_gpio.h"
 #include "em_usart.h"
 
+volatile uint8_t iflag = false;
+volatile uint8_t data;
+
+void UART0_RX_IRQHandler(void)
+{
+    iflag = true;
+    data = USART_RxDataGet(UART0);
+}
+
 int main(void)
 {
     CMU_ClockEnable(cmuClock_GPIO, true);
@@ -17,11 +26,14 @@ int main(void)
     UART0->ROUTE |= USART_ROUTE_LOCATION_LOC1;
     UART0->ROUTE |= USART_ROUTE_RXPEN | USART_ROUTE_TXPEN;
 
+    USART_IntEnable(UART0, UART_IF_RXDATAV);
+    NVIC_EnableIRQ(UART0_RX_IRQn);
+
     // test
-    char c;
     while (1) {
-        c = USART_Rx(UART0);
-        for (int i = 0; i < 30; i++)
-            USART_Tx(UART0, c);
+        if (iflag) {
+            iflag = false;
+            USART_Tx(UART0, data);
+        }
     }
 }
