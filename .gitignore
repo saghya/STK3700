@@ -4,3 +4,4 @@ CMSIS
 Drivers
 emlib
 service
+.vscode/*.db*

@@ -64,9 +64,7 @@ int main(void)
 
   /* If first word of user data page is non-zero, enable Energy Profiler trace */
   BSP_TraceProfilerSetup();
-
   /* Enable two leds to show we're alive */
-  BSP_LedsInit();
   BSP_LedSet(0);
   BSP_LedSet(1);
 
@@ -128,7 +126,6 @@ int main(void)
     SegmentLCD_Battery(2);
     SegmentLCD_Battery(3);
     SegmentLCD_Battery(4);
-
     SegmentLCD_ARing(0, 1);
     SegmentLCD_ARing(1, 1);
     SegmentLCD_ARing(2, 1);
