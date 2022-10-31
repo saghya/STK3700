@@ -6,122 +6,26 @@
 #include "em_usart.h"
 #include "em_lcd.h"
 #include "segmentlcd.h"
+#include "segmentlcd_individual.h"
 
 #define SLEEP 200
 
 typedef enum _segment { a, b, c, d, e, f, g } segment;
+typedef enum _direction { up, down, left, right } direction;
 
-typedef struct _position {
-    int com;
-    int bit;
-} position;
+volatile uint32_t  msTicks; /* counts 1ms timeTicks */
+volatile direction dir = right;
 
-position get_pos(int num, segment seg)
-{
-    position pos;
+SegmentLCD_UpperCharSegments_TypeDef
+    upperCharSegments[SEGMENT_LCD_NUM_OF_UPPER_CHARS];
+SegmentLCD_LowerCharSegments_TypeDef
+    lowerCharSegments[SEGMENT_LCD_NUM_OF_LOWER_CHARS];
 
-    bool wtf = num > 4 && num < 7;
-
-    // set bit base
-    switch (seg) {
-        case a:
-        case e:
-        case f:
-        case g:
-            pos.bit = 13;
-            break;
-        case b:
-        case c:
-        case d:
-            pos.bit = 14;
-            break;
-        default:
-            pos.com = -1;
-            pos.bit = -1;
-            return pos;
-    }
-
-    // set com
-    switch (seg) {
-        case a:
-            pos.com = wtf ? 0 : 1;
-            break;
-        case e:
-            pos.com = wtf ? 6 : 7;
-            break;
-        case f:
-            pos.com = wtf ? 2 : 3;
-            break;
-        case g:
-            pos.com = wtf ? 3 : 4;
-            break;
-        case b:
-            pos.com = 1;
-            break;
-        case c:
-            pos.com = 5;
-            break;
-        case d:
-            pos.com = 7;
-            break;
-        default:
-            pos.com = -1;
-            pos.bit = -1;
-            return pos;
-    }
-
-    // final bit
-    if ((num > 4 && pos.bit % 2) || (num > 3 && !(pos.bit % 2))) {
-        pos.bit += 8 + 2 * (num - 1);
-    } else {
-        pos.bit += 2 * (num - 1);
-    }
-
-    return pos;
-}
-
-bool print_segment(int num, segment seg, bool enable)
-{
-    position pos = get_pos(num, seg);
-    if (pos.com < 0 || pos.bit < 0) {
-        return false;
-    }
-
-    LCD_SegmentSet(pos.com, pos.bit, enable);
-
-    // g is actually 2 segments
-    if (seg == g) {
-        if (num < 4 || num == 7)
-            LCD_SegmentSet(pos.com, pos.bit + 1, enable);
-        else if (num == 4)
-            LCD_SegmentSet(pos.com, pos.bit + 8 + 1, enable);
-        else
-            LCD_SegmentSet(pos.com + 1, pos.bit + 1, enable);
-    }
-
-    return true;
-}
-
-volatile uint32_t msTicks; /* counts 1ms timeTicks */
-
-/* Locatl prototypes */
-void Delay(uint32_t dlyTicks);
-
-/*******************************************************************************
- * @brief SysTick_Handler
- *   Interrupt Service Routine for system tick counter
- * @note
- *   No wrap around protection
- ******************************************************************************/
 void SysTick_Handler(void)
 {
     msTicks++; /* increment counter necessary in Delay()*/
 }
 
-/*******************************************************************************
- * @brief Delays number of msTick Systicks (typically 1 ms)
- * @param dlyTicks Number of ticks to delay
- ******************************************************************************/
 void Delay(uint32_t dlyTicks)
 {
     uint32_t curTicks;
@@ -129,6 +33,28 @@ void Delay(uint32_t dlyTicks)
     curTicks = msTicks;
     while ((msTicks - curTicks) < dlyTicks)
         ;
+}
+
+void UART0_RX_IRQHandler(void)
+{
+    switch (USART_RxDataGet(UART0)) {
+        case 'd':
+        case 'l':
+            dir = right;
+            break;
+        case 'a':
+        case 'h':
+            dir = left;
+            break;
+        case 'w':
+        case 'k':
+            dir = up;
+            break;
+        case 's':
+        case 'j':
+            dir = down;
+            break;
+    }
 }
 
 int main(void)
@@ -142,7 +68,11 @@ int main(void)
 
     USART_InitAsync_TypeDef u = USART_INITASYNC_DEFAULT; // UART config
     USART_InitAsync(UART0, &u);                          // 115200 8N1
-    UART0->ROUTE |= (1 << 8 | 1 << 0 | 1 << 1);          // Location1; Tx; Rx
+    UART0->ROUTE |= USART_ROUTE_LOCATION_LOC1;
+    UART0->ROUTE |= USART_ROUTE_RXPEN | USART_ROUTE_TXPEN;
+
+    USART_IntEnable(UART0, UART_IF_RXDATAV);
+    NVIC_EnableIRQ(UART0_RX_IRQn);
 
     /* Setup SysTick Timer for 1 msec interrupts  */
     if (SysTick_Config(CMU_ClockFreqGet(cmuClock_CORE) / 1000)) {
@@ -153,26 +83,38 @@ int main(void)
     SegmentLCD_Init(false);
 
     // test
-    char ch;
-    int  num = 1, seg = g;
+    int num = 0, seg = a;
     while (1) {
-        print_segment(num, seg, true);
-        ch = USART_Rx(UART0);
         SegmentLCD_Number(num);
-        print_segment(num, seg, false);
-        switch (ch) {
-            case 'd':
-            case 'l':
-                num = num < 7 ? num + 1 : 1;
+
+        lowerCharSegments[num].raw |= 1 << seg;
+        SegmentLCD_LowerSegments(lowerCharSegments);
+        Delay(500);
+        lowerCharSegments[num].raw &= ~(1 << seg);
+        SegmentLCD_LowerSegments(lowerCharSegments);
+        switch (dir) {
+            case right:
+                if (seg == e || seg == f) {
+                    switch (seg) {
+                        case e:
+                            seg = g;
+                            break;
+                        case f:
+                            seg = a;
+                            break;
+                    }
+                }
+                else {
+                    num = num < 6 ? num + 1 : 0;
+                }
                 break;
-            case 'a':
-            case 'h':
-                num = num > 1 ? num - 1 : 7;
+            case left:
+                num = num > 0 ? num - 1 : 6;
                 break;
-            case 'w':
-            case 'k':
+            case up:
                 switch (seg) {
                     case a:
+                        num++;
                         seg = e;
                         break;
                     case b:
@@ -195,6 +137,35 @@ int main(void)
                         break;
                 }
                 break;
+
+            case down:
+                switch (seg) {
+                    case a:
+                        num++;
+                        seg = f;
+                        break;
+                    case b:
+                        seg = c;
+                        break;
+                    case c:
+                        seg = b;
+                        break;
+                    case d:
+                        num++;
+                        seg = f;
+                        break;
+                    case e:
+                        seg = f;
+                        break;
+                    case f:
+                        seg = e;
+                        break;
+                    case g:
+                        num++;
+                        seg = e;
+                        break;
+                }
         }
     }
 }
+
