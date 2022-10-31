@@ -8,8 +8,6 @@
 #include "segmentlcd.h"
 #include "segmentlcd_individual.h"
 
-#define SLEEP 200
-
 typedef enum _segment { a, b, c, d, e, f, g } segment;
 typedef enum _direction { up, down, left, right } direction;
 
