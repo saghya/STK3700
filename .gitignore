@@ -3,4 +3,6 @@ BSP
 CMSIS
 Drivers
 emlib
-src
+service
+.vscode/*.db*
+*.code-workspace
