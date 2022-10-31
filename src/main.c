@@ -1,140 +1,218 @@
-/***************************************************************************//**
- * @file
- * @brief LCD controller demo for EFM32GG_STK3700 development kit
- *******************************************************************************
- * # License
- * <b>Copyright 2018 Silicon Laboratories Inc. www.silabs.com</b>
- *******************************************************************************
- *
- * The licensor of this software is Silicon Laboratories Inc. Your use of this
- * software is governed by the terms of Silicon Labs Master Software License
- * Agreement (MSLA) available at
- * www.silabs.com/about-us/legal/master-software-license-agreement. This
- * software is distributed to you in Source Code format and is governed by the
- * sections of the MSLA applicable to Source Code.
- *
- ******************************************************************************/
-
 #include <stdint.h>
 #include <stdbool.h>
-#include "em_device.h"
-#include "em_chip.h"
 #include "em_cmu.h"
-#include "bsp.h"
+#include "em_device.h"
+#include "em_gpio.h"
+#include "em_usart.h"
+#include "em_lcd.h"
 #include "segmentlcd.h"
-#include "bsp_trace.h"
+#include "segmentlcd_individual.h"
 
-volatile uint32_t msTicks; /* counts 1ms timeTicks */
+#define SLEEP 200
 
-/* Locatl prototypes */
-void Delay(uint32_t dlyTicks);
+typedef enum _segment { a, b, c, d, e, f, g } segment;
+typedef enum _direction { up, down, left, right } direction;
 
-/***************************************************************************//**
- * @brief SysTick_Handler
- *   Interrupt Service Routine for system tick counter
- * @note
- *   No wrap around protection
- ******************************************************************************/
+volatile uint32_t  msTicks; /* counts 1ms timeTicks */
+volatile direction dir      = right;
+volatile direction prev_dir = right;
+
+SegmentLCD_UpperCharSegments_TypeDef
+    upperCharSegments[SEGMENT_LCD_NUM_OF_UPPER_CHARS];
+SegmentLCD_LowerCharSegments_TypeDef
+    lowerCharSegments[SEGMENT_LCD_NUM_OF_LOWER_CHARS];
+
 void SysTick_Handler(void)
 {
-  msTicks++;       /* increment counter necessary in Delay()*/
+    msTicks++; /* increment counter necessary in Delay()*/
 }
 
-/***************************************************************************//**
- * @brief Delays number of msTick Systicks (typically 1 ms)
- * @param dlyTicks Number of ticks to delay
- ******************************************************************************/
 void Delay(uint32_t dlyTicks)
 {
-  uint32_t curTicks;
+    uint32_t curTicks;
 
-  curTicks = msTicks;
-  while ((msTicks - curTicks) < dlyTicks) ;
+    curTicks = msTicks;
+    while ((msTicks - curTicks) < dlyTicks)
+        ;
 }
 
-/***************************************************************************//**
- * @brief  Main function
- ******************************************************************************/
-int main(void)
+void UART0_RX_IRQHandler(void)
 {
-  int i;
-
-  /* Chip errata */
-  CHIP_Init();
-
-  /* If first word of user data page is non-zero, enable Energy Profiler trace */
-  BSP_TraceProfilerSetup();
-  /* Enable two leds to show we're alive */
-  BSP_LedSet(0);
-  BSP_LedSet(1);
-
-  /* Setup SysTick Timer for 1 msec interrupts  */
-  if (SysTick_Config(CMU_ClockFreqGet(cmuClock_CORE) / 1000)) {
-    while (1) ;
-  }
-
-  /* Enable LCD without voltage boost */
-  SegmentLCD_Init(false);
-
-  /* Infinite loop with test pattern. */
-  while (1) {
-    /* Enable all segments */
-    SegmentLCD_AllOn();
-    Delay(500);
-
-    /* Disable all segments */
-    SegmentLCD_AllOff();
-
-    /* Write a number */
-    for (i = 0; i < 10; i++) {
-      SegmentLCD_Number(i * 1111);
-      Delay(200);
+    prev_dir = dir;
+    switch (USART_RxDataGet(UART0)) {
+        case 'd':
+        case 'l':
+        case 67: // right arrow
+            dir = right;
+            break;
+        case 'a':
+        case 'h':
+        case 68: // left arrow
+            dir = left;
+            break;
+        case 'w':
+        case 'k':
+        case 65: // up arrow
+            dir = up;
+            break;
+        case 's':
+        case 'j':
+        case 66: // down arrow
+            dir = down;
+            break;
     }
-    /* Write some text */
-    SegmentLCD_Write("Silicon");
-    Delay(500);
-    SegmentLCD_Write("Labs");
-    Delay(500);
-    SegmentLCD_Write("Giant");
-    Delay(500);
-    SegmentLCD_Write("Gecko");
-    Delay(1000);
-
-    SegmentLCD_AllOff();
-
-    /* Test segments */
-    SegmentLCD_Symbol(LCD_SYMBOL_GECKO, 1);
-    SegmentLCD_Symbol(LCD_SYMBOL_ANT, 1);
-    SegmentLCD_Symbol(LCD_SYMBOL_PAD0, 1);
-    SegmentLCD_Symbol(LCD_SYMBOL_PAD1, 1);
-    SegmentLCD_Symbol(LCD_SYMBOL_EFM32, 1);
-    SegmentLCD_Symbol(LCD_SYMBOL_MINUS, 1);
-    SegmentLCD_Symbol(LCD_SYMBOL_COL3, 1);
-    SegmentLCD_Symbol(LCD_SYMBOL_COL5, 1);
-    SegmentLCD_Symbol(LCD_SYMBOL_COL10, 1);
-    SegmentLCD_Symbol(LCD_SYMBOL_DEGC, 1);
-    SegmentLCD_Symbol(LCD_SYMBOL_DEGF, 1);
-    SegmentLCD_Symbol(LCD_SYMBOL_DP2, 1);
-    SegmentLCD_Symbol(LCD_SYMBOL_DP3, 1);
-    SegmentLCD_Symbol(LCD_SYMBOL_DP4, 1);
-    SegmentLCD_Symbol(LCD_SYMBOL_DP5, 1);
-    SegmentLCD_Symbol(LCD_SYMBOL_DP6, 1);
-    SegmentLCD_Symbol(LCD_SYMBOL_DP10, 1);
-
-    SegmentLCD_Battery(0);
-    SegmentLCD_Battery(1);
-    SegmentLCD_Battery(2);
-    SegmentLCD_Battery(3);
-    SegmentLCD_Battery(4);
-    SegmentLCD_ARing(0, 1);
-    SegmentLCD_ARing(1, 1);
-    SegmentLCD_ARing(2, 1);
-    SegmentLCD_ARing(3, 1);
-    SegmentLCD_ARing(4, 1);
-    SegmentLCD_ARing(5, 1);
-    SegmentLCD_ARing(6, 1);
-    SegmentLCD_ARing(7, 1);
-
-    Delay(1000);
-  }
 }
+
+int main()
+{
+    CMU_ClockEnable(cmuClock_GPIO, true);  // GPIO clk enable
+    CMU_ClockEnable(cmuClock_UART0, true); // UART clk enable
+
+    GPIO_PinModeSet(gpioPortF, 7, gpioModePushPull, 1); // PF7 output 1
+    GPIO_PinModeSet(gpioPortE, 0, gpioModePushPull, 1); // PE0 output 1
+    GPIO_PinModeSet(gpioPortE, 1, gpioModeInput, 0);    // PE1 input  0
+
+    USART_InitAsync_TypeDef u = USART_INITASYNC_DEFAULT; // UART config
+    USART_InitAsync(UART0, &u);                          // 115200 8N1
+    UART0->ROUTE |= USART_ROUTE_LOCATION_LOC1;
+    UART0->ROUTE |= USART_ROUTE_RXPEN | USART_ROUTE_TXPEN;
+
+    USART_IntEnable(UART0, UART_IF_RXDATAV);
+    NVIC_EnableIRQ(UART0_RX_IRQn);
+
+    /* Setup SysTick Timer for 1 msec interrupts  */
+    if (SysTick_Config(CMU_ClockFreqGet(cmuClock_CORE) / 1000)) {
+        while (1)
+            ;
+    }
+    /* Enable LCD without voltage boost */
+    SegmentLCD_Init(false);
+
+    // test
+    int num = 0, seg = a;
+    while (1) {
+        SegmentLCD_Number(num);
+
+        lowerCharSegments[num].raw |= 1 << seg;
+        SegmentLCD_LowerSegments(lowerCharSegments);
+        Delay(500);
+        lowerCharSegments[num].raw &= ~(1 << seg);
+        SegmentLCD_LowerSegments(lowerCharSegments);
+        switch (dir) {
+            case right:
+                if (seg == e || seg == f) {
+                    switch (seg) {
+                        case e:
+                            seg = g;
+                            break;
+                        case f:
+                            seg = a;
+                            break;
+                    }
+                } else {
+                    num = num < 6 ? num + 1 : 0;
+                }
+                break;
+            case left:
+                num = num > 0 ? num - 1 : 6;
+                if (seg == e || seg == f) {
+                    switch (seg) {
+                        case e:
+                            seg = g;
+                            break;
+                        case f:
+                            seg = a;
+                            break;
+                    }
+                }
+                break;
+            case up:
+                switch (prev_dir) {
+                    case right:
+                        switch (seg) {
+                            case a:
+                                num++;
+                                seg = e;
+                                break;
+                            case b:
+                                seg = c;
+                                break;
+                            case c:
+                                seg = b;
+                                break;
+                            case d:
+                                num++;
+                                seg = e;
+                                break;
+                            case e:
+                                seg = f;
+                                break;
+                            case f:
+                                seg = e;
+                                break;
+                            case g:
+                                num++;
+                                seg = f;
+                                break;
+                        }
+                        break;
+                    case left:
+                        switch (seg) {
+                            case a:
+                                seg = e;
+                                break;
+                            case b:
+                                seg = c;
+                                break;
+                            case c:
+                                seg = b;
+                                break;
+                            case d:
+                                seg = e;
+                                break;
+                            case e:
+                                seg = f;
+                                break;
+                            case f:
+                                seg = e;
+                                break;
+                            case g:
+                                seg = f;
+                                break;
+                        }
+                        break;
+                }
+                break;
+
+            case down:
+                switch (seg) {
+                    case a:
+                        num++;
+                        seg = f;
+                        break;
+                    case b:
+                        seg = c;
+                        break;
+                    case c:
+                        seg = b;
+                        break;
+                    case d:
+                        num++;
+                        seg = f;
+                        break;
+                    case e:
+                        seg = f;
+                        break;
+                    case f:
+                        seg = e;
+                        break;
+                    case g:
+                        num++;
+                        seg = e;
+                        break;
+                }
+                break;
+        }
+    }
+}
+
