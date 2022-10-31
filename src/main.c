@@ -14,7 +14,8 @@ typedef enum _segment { a, b, c, d, e, f, g } segment;
 typedef enum _direction { up, down, left, right } direction;
 
 volatile uint32_t  msTicks; /* counts 1ms timeTicks */
-volatile direction dir = right;
+volatile direction dir      = right;
+volatile direction prev_dir = right;
 
 SegmentLCD_UpperCharSegments_TypeDef
     upperCharSegments[SEGMENT_LCD_NUM_OF_UPPER_CHARS];
@@ -37,27 +38,32 @@ void Delay(uint32_t dlyTicks)
 
 void UART0_RX_IRQHandler(void)
 {
+    prev_dir = dir;
     switch (USART_RxDataGet(UART0)) {
         case 'd':
         case 'l':
+        case 67: // right arrow
             dir = right;
             break;
         case 'a':
         case 'h':
+        case 68: // left arrow
             dir = left;
             break;
         case 'w':
         case 'k':
+        case 65: // up arrow
             dir = up;
             break;
         case 's':
         case 'j':
+        case 66: // down arrow
             dir = down;
             break;
     }
 }
 
-int main(void)
+int main()
 {
     CMU_ClockEnable(cmuClock_GPIO, true);  // GPIO clk enable
     CMU_ClockEnable(cmuClock_UART0, true); // UART clk enable
@@ -103,37 +109,77 @@ int main(void)
                             seg = a;
                             break;
                     }
-                }
-                else {
+                } else {
                     num = num < 6 ? num + 1 : 0;
                 }
                 break;
             case left:
                 num = num > 0 ? num - 1 : 6;
+                if (seg == e || seg == f) {
+                    switch (seg) {
+                        case e:
+                            seg = g;
+                            break;
+                        case f:
+                            seg = a;
+                            break;
+                    }
+                }
                 break;
             case up:
-                switch (seg) {
-                    case a:
-                        num++;
-                        seg = e;
+                switch (prev_dir) {
+                    case right:
+                        switch (seg) {
+                            case a:
+                                num++;
+                                seg = e;
+                                break;
+                            case b:
+                                seg = c;
+                                break;
+                            case c:
+                                seg = b;
+                                break;
+                            case d:
+                                num++;
+                                seg = e;
+                                break;
+                            case e:
+                                seg = f;
+                                break;
+                            case f:
+                                seg = e;
+                                break;
+                            case g:
+                                num++;
+                                seg = f;
+                                break;
+                        }
                         break;
-                    case b:
-                        seg = c;
-                        break;
-                    case c:
-                        seg = b;
-                        break;
-                    case d:
-                        seg = e;
-                        break;
-                    case e:
-                        seg = f;
-                        break;
-                    case f:
-                        seg = e;
-                        break;
-                    case g:
-                        seg = f;
+                    case left:
+                        switch (seg) {
+                            case a:
+                                seg = e;
+                                break;
+                            case b:
+                                seg = c;
+                                break;
+                            case c:
+                                seg = b;
+                                break;
+                            case d:
+                                seg = e;
+                                break;
+                            case e:
+                                seg = f;
+                                break;
+                            case f:
+                                seg = e;
+                                break;
+                            case g:
+                                seg = f;
+                                break;
+                        }
                         break;
                 }
                 break;
@@ -165,6 +211,7 @@ int main(void)
                         seg = e;
                         break;
                 }
+                break;
         }
     }
 }
