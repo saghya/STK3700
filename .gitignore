@@ -5,3 +5,4 @@ Drivers
 emlib
 service
 .vscode/*.db*
+*.code-workspace
