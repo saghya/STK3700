@@ -1,0 +1,5 @@
+{
+    "key": "ctrl+d",
+    "command": "workbench.action.tasks.runTask",
+    "args": "Flash"
+  }

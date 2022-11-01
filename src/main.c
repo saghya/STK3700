@@ -7,10 +7,11 @@
 #include "em_lcd.h"
 #include "segmentlcd.h"
 #include "segmentlcd_individual.h"
+#include "display.h"
 
 #define SLEEP 200
 
-typedef enum _segment { a, b, c, d, e, f, g } segment;
+typedef enum _segment { a, b, c, d, e, f, g, h, l, m } segment;
 typedef enum _direction { up, down, left, right } direction;
 
 volatile uint32_t  msTicks; /* counts 1ms timeTicks */
@@ -63,7 +64,7 @@ void UART0_RX_IRQHandler(void)
     }
 }
 
-int main()
+__STATIC_INLINE void UART_Init()
 {
     CMU_ClockEnable(cmuClock_GPIO, true);  // GPIO clk enable
     CMU_ClockEnable(cmuClock_UART0, true); // UART clk enable
@@ -79,7 +80,11 @@ int main()
 
     USART_IntEnable(UART0, UART_IF_RXDATAV);
     NVIC_EnableIRQ(UART0_RX_IRQn);
+}
 
+int main()
+{
+    UART_Init();
     /* Setup SysTick Timer for 1 msec interrupts  */
     if (SysTick_Config(CMU_ClockFreqGet(cmuClock_CORE) / 1000)) {
         while (1)
@@ -87,132 +92,23 @@ int main()
     }
     /* Enable LCD without voltage boost */
     SegmentLCD_Init(false);
-
+    map map={{0}};
+    /*map map = {{{1,1,1,1,1,1,1,1,1,1,1,1,1,1,1}
+               ,{1,0,1,0,1,0,1,0,1,0,1,0,1,0,1}
+               ,{0,0,1,1,1,1,1,1,1,1,1,1,1,1,1}
+               ,{0,0,1,0,1,0,1,0,1,0,1,0,1,0,1}
+               ,{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}}};*/
+    
+    drawLine(&map,(pixel){0,4},(pixel){10,4});
+    drawLine(&map,(pixel){10,4},(pixel){10,0});
+    drawLine(&map,(pixel){10,0},(pixel){14,0});
+    displayMap(&map);
     // test
     int num = 0, seg = a;
     while (1) {
         SegmentLCD_Number(num);
-
-        lowerCharSegments[num].raw |= 1 << seg;
-        SegmentLCD_LowerSegments(lowerCharSegments);
+        num++;
         Delay(500);
-        lowerCharSegments[num].raw &= ~(1 << seg);
-        SegmentLCD_LowerSegments(lowerCharSegments);
-        switch (dir) {
-            case right:
-                if (seg == e || seg == f) {
-                    switch (seg) {
-                        case e:
-                            seg = g;
-                            break;
-                        case f:
-                            seg = a;
-                            break;
-                    }
-                } else {
-                    num = num < 6 ? num + 1 : 0;
-                }
-                break;
-            case left:
-                num = num > 0 ? num - 1 : 6;
-                if (seg == e || seg == f) {
-                    switch (seg) {
-                        case e:
-                            seg = g;
-                            break;
-                        case f:
-                            seg = a;
-                            break;
-                    }
-                }
-                break;
-            case up:
-                switch (prev_dir) {
-                    case right:
-                        switch (seg) {
-                            case a:
-                                num++;
-                                seg = e;
-                                break;
-                            case b:
-                                seg = c;
-                                break;
-                            case c:
-                                seg = b;
-                                break;
-                            case d:
-                                num++;
-                                seg = e;
-                                break;
-                            case e:
-                                seg = f;
-                                break;
-                            case f:
-                                seg = e;
-                                break;
-                            case g:
-                                num++;
-                                seg = f;
-                                break;
-                        }
-                        break;
-                    case left:
-                        switch (seg) {
-                            case a:
-                                seg = e;
-                                break;
-                            case b:
-                                seg = c;
-                                break;
-                            case c:
-                                seg = b;
-                                break;
-                            case d:
-                                seg = e;
-                                break;
-                            case e:
-                                seg = f;
-                                break;
-                            case f:
-                                seg = e;
-                                break;
-                            case g:
-                                seg = f;
-                                break;
-                        }
-                        break;
-                }
-                break;
-
-            case down:
-                switch (seg) {
-                    case a:
-                        num++;
-                        seg = f;
-                        break;
-                    case b:
-                        seg = c;
-                        break;
-                    case c:
-                        seg = b;
-                        break;
-                    case d:
-                        num++;
-                        seg = f;
-                        break;
-                    case e:
-                        seg = f;
-                        break;
-                    case f:
-                        seg = e;
-                        break;
-                    case g:
-                        num++;
-                        seg = e;
-                        break;
-                }
-                break;
-        }
     }
 }
 
