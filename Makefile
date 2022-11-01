@@ -96,13 +96,10 @@ size:
 
 flash:
 	JLinkExe -Device $(DEVICE) -If SWD -Speed 4000 -CommanderScript Flash.jlink
-
 gdb:
-	JLinkGDBServer -if SWD -device $(DEVICE) -speed 4000 &
-	alacritty -e $(GDB) -x debug.gdb $(BIN)/$(SRC).axf
+	JLinkGDBServer -if SWD -device $(DEVICE) -speed 4000
 
 clean:
 	rm -rfv *.axf *.hex *.bin *.s37 *.map bin 
 
 .PHONY: all emlib cmsis bsp drivers service axf hex bin s37 size flash gdb clean
-

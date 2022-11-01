@@ -1,9 +1,9 @@
 -DEFM32GG990F1024=1
--I/opt/simplicitystudio/developer/sdks/gecko_sdk_suite/v2.7/hardware/kit/EFM32GG_STK3700/config
--I/opt/simplicitystudio/developer/sdks/gecko_sdk_suite/v2.7/platform/CMSIS/Include/
--I/opt/simplicitystudio/developer/sdks/gecko_sdk_suite/v2.7/platform/emlib/inc
--I/opt/simplicitystudio/developer/sdks/gecko_sdk_suite/v2.7/hardware/kit/common/bsp
--I/opt/simplicitystudio/developer/sdks/gecko_sdk_suite/v2.7/platform/Device/SiliconLabs/EFM32GG/Include
--I/opt/simplicitystudio/developer/sdks/gecko_sdk_suite/v2.7/platform/common/inc
--I/opt/simplicitystudio/developer/sdks/gecko_sdk_suite/v2.7/hardware/kit/common/drivers
--I./Drivers
+-I$(SDK)/hardware/kit/EFM32GG_STK3700/config
+-I$(SDK)/platform/CMSIS/Include/
+-I$(SDK)/platform/emlib/inc
+-I$(SDK)/hardware/kit/common/bsp
+-I$(SDK)/platform/Device/SiliconLabs/EFM32GG/Include
+-I$(SDK)/platform/common/inc
+-I$(SDK)/hardware/kit/common/drivers
+-I$(SDK)/hardware/kit/common/config

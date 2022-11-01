@@ -1,0 +1,14 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"files.associations": {
+			"sl_component_catalog.h": "c",
+			"sl_system_init.h": "c",
+			"sl_system_kernel.h": "c"
+		}
+	}
+}

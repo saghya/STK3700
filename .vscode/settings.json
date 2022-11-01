@@ -1,0 +1,11 @@
+{
+    "files.associations": {
+        "bsp_trace.h": "c",
+        "em_chip.h": "c",
+        "bsp.h": "c",
+        "em_device.h": "c",
+        "segmentlcd.h": "c",
+        "em_gpio.h": "c"
+    },
+    "cortex-debug.gdbPath.linux": "/usr/bin/gdb-multiarch"
+}
